@@ -38,7 +38,7 @@ public class BookingSteps {
                     .body(requestBody)
                     .log().all()
                 .when()
-                    .post("https://automationintesting.online/booking")
+                    .post("https://automationintesting.online/api/booking")
                 .then()
                     .log().all()
                     .extract().response();
@@ -67,7 +67,7 @@ public class BookingSteps {
                 .log().all()
                 .pathParam("id", bookingId)
                 .when()
-                .get("https://automationintesting.online/booking/{id}")
+                .get("https://automationintesting.online/api/booking/{id}")
                 .then()
                 .log().all()
                 .extract().response();
