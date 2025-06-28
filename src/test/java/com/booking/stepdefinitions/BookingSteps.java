@@ -2,6 +2,7 @@ package com.booking.stepdefinitions;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
@@ -13,8 +14,9 @@ public class BookingSteps {
     private String requestBody;
     private int bookingId;
     private String token;
+    private String roomid;
 
-   @When("I want to login to application with {string}, {string} and received token")
+    @When("I want to login to application with {string}, {string} and received token")
     public void iwantToLogin(String username, String password) {
         requestBody = """
                             {
@@ -162,7 +164,7 @@ public class BookingSteps {
                 .body(requestBody)
                 .log().all()
                 .when()
-                .put("https://automationintesting.online/api/booking/{id}")
+                .put("https://automationintesting.online/api/booking/")
                 .then()
                 .log().all()
                 .extract().response();
@@ -181,5 +183,95 @@ public class BookingSteps {
                 .body("phone", equalTo(phone))
                 .body("bookingdates", hasSize(greaterThan(0)))
                 .body("checkin", hasSize(greaterThan(0)));
+    }
+
+    @Given("I send a request to filter details based on roomid {string}")
+    public void iSendARequestToFilterDetailsBasedOnRoomidRoomid(String roomid) {
+        response = given()
+                //   .cookie("token", token)
+                .log().all()
+                .queryParam("roomid", roomid)
+                .when()
+                .get("https://automationintesting.online/api/booking/")
+                .then()
+                .log().all()
+                .extract().response();
+    }
+
+    @Then("I shall receive the booking for rooomid successfully")
+    public void iReceiveRoomIdBookingDetails() {
+        response.then()
+                .statusCode(200)
+                .body("bookings.size()", greaterThan(0))
+                .body("bookings[0].roomid", notNullValue())
+                .log().all();
+    }
+
+    @Given("I send a request to check booking unavailability based on {string}, {string}")
+    public void iSendARequestToCheckUnavailability(String checkin, String checkout) {
+        response = given()
+                //   .cookie("token", token)
+                .log().all()
+                .queryParam("checkin", checkin)
+                .queryParam("checkout", checkout)
+                .when()
+                .get("https://automationintesting.online/api/booking/")
+                .then()
+                .log().all()
+                .extract().response();
+    }
+
+    @Then("I shall receive the roomid unavailable")
+    public void iReceiveRoomIdUnavailable() {
+        response.then()
+                .statusCode(200)
+                .body("[0].roomid", notNullValue())
+                .log().all();
+    }
+
+    @Given("I send a request to Get booking summary based on roomid {string}")
+    public void iGetBookingSummaryBasedOnRoomid(String roomid) {
+        response = given()
+                .log().all()
+                .queryParam("roomid", roomid)
+                .when()
+                .get("https://automationintesting.online/api/booking/summary")
+                .then()
+                .log().all()
+                .extract().response();
+    }
+
+    @Then("I shall receive the booking summary successfully")
+    public void iReceiveBookingSummary() {
+        response.then()
+                .statusCode(200)
+                .body("bookings.size()", greaterThan(0))
+                .body("bookings[0].bookingDates", notNullValue())
+                .body("bookings[0].checkin", notNullValue())
+                .body("bookings[0].checkout", notNullValue())
+                .log().all();
+    }
+
+    @Given("I send a request to Delete booking details based on id {int}")
+    public void iSendARequestToDeleteBookingDetailsBasedOnIdId(int id) {
+        //RestAssured.baseURI = "https://automationintesting.online/api/booking";
+        response = given()
+                .log().all()
+                .cookie("token",token)
+                .pathParam("id", id)
+                .when()
+                .delete("https://automationintesting.online/api/booking")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .extract().response();
+    }
+
+    @Then("The booking details deleted successfully")
+    public void theBookingDetailsDeletedSuccessfully() {
+        response.then()
+                .statusCode(200)
+                .body(null)
+                .log().all();
     }
 }
