@@ -14,7 +14,7 @@ public class BookingSteps {
     private String requestBody;
     private int bookingId;
     private String token;
-    private String roomid;
+
 
     @When("I want to login to application with {string}, {string} and received token")
     public void iwantToLogin(String username, String password) {
@@ -260,7 +260,7 @@ public class BookingSteps {
                 .cookie("token",token)
                 .pathParam("id", id)
                 .when()
-                .delete("https://automationintesting.online/api/booking")
+                .delete("https://automationintesting.online/api/booking/")
                 .then()
                 .log().all()
                 .statusCode(200)
