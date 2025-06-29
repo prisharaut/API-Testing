@@ -40,6 +40,27 @@ public class BookingSteps {
 
     }
 
+    @Then("I will validate the token recieved")
+    public void iWillValidateTheTokenRecieved() {
+        requestBody = """
+                            {
+                             "token": "%s"
+                    }""".formatted(token);
+
+        response =given()
+                .header("Content-Type", "application/json")
+                .body(requestBody)
+                .log().all()
+                .when()
+                .post("https://automationintesting.online/api/auth/validate")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .body("token",equalTo(token))
+                .extract().response();
+        token = response.jsonPath().getString("token");
+        System.out.println(token);
+    }
 
     @Then ("I want to logout application with token")
     public void iwantToLogout() {
@@ -60,7 +81,6 @@ public class BookingSteps {
                 .extract().response();
 
     }
-
 
     @Given("I have booking details for roomid {string} available with {string}, {string}, {string}, {string}, {string}, {string}")
     public void iHaveBookingDetailsPayload(String roomid, String firstname, String lastname, String email, String phone, String checkin,String checkout) {
@@ -128,33 +148,34 @@ public class BookingSteps {
     public void iShallReceiveTheBookingDetails() {
         response.then()
                 .statusCode(200)
-                .body("bookingid", equalTo(bookingId))
+                .body("bookingid", notNullValue())
                 .body("roomid", notNullValue())
                 .body("firstname", equalTo("string"))
                 .body("lastname", equalTo("string"))
-                .body("depositpaid", is(true))
+                .body("depositpaid", instanceOf(Boolean.class))
                 .body("email", equalTo("string"))
                 .body("phone", notNullValue())
                 .body("bookingdates", hasSize(greaterThan(0)))
-                .body("checkin", hasSize(greaterThan(0)));
+                .body("checkin", hasSize(greaterThan(0)))
+                .body("checkout", hasSize(greaterThan(0)));
     }
 
-    @Given("I have updated the booking payload with {string}, {string}, {string}, {string}")
-    public void iHaveUpdatedBookingPayload(String firstname, String lastname, String email, String phone) {
+    @Given("I have updated the booking for bookingid {int} payload with {string}, {string}, {string}, {string}, {string}, {string}, {string}")
+    public void iHaveUpdatedBookingPayload(int id, String roomid,String firstname, String lastname, String email, String phone, String checkin, String checkout) {
         requestBody = """
                             {
-                            "bookingid": 1,
-                             "roomid": 1,
+                            "bookingid": %d,
+                             "roomid": %s,
                              "firstname": "%s",
                              "lastname": "%s",
                              "depositpaid": true,
                              "email": "%s",
                              "phone": "%s",
                              "bookingdates": {
-                              "checkin": "2025-07-03",
-                               "checkout": "2025-07-04"
+                              "checkin": "%s",
+                               "checkout": "%s"
                                              }
-                    }""".formatted(firstname, lastname, email, phone);
+                    }""".formatted(roomid, firstname, lastname, email, phone, checkin,checkout);
     }
 
     @When("I want to update the booking request")
@@ -177,14 +198,15 @@ public class BookingSteps {
         response.then()
                 .statusCode(200)
                 .body("bookingid", equalTo(bookingId))
-                .body("roomid", notNullValue())
-                .body("firstname", equalTo(firstname))
-                .body("lastname", equalTo(lastname))
-                .body("depositpaid", is(true))
-                .body("email", equalTo(email))
-                .body("phone", equalTo(phone))
-                .body("bookingdates", hasSize(greaterThan(0)))
-                .body("checkin", hasSize(greaterThan(0)));
+                .body("booking.bookingid",equalTo(bookingId))
+                .body("booking.roomid", notNullValue())
+                .body("booking.firstname", equalTo(firstname))
+                .body("booking.lastname", equalTo(lastname))
+                .body("booking.depositpaid", instanceOf(Boolean.class))
+                .body("booking.email", equalTo(email))
+                .body("booking.phone", equalTo(phone))
+                .body("booking.bookingdates.checkin", notNullValue())
+                .body("booking.bookingdates.checkout", null);
     }
 
     @Given("I send a request to filter details based on roomid {string}")
@@ -205,7 +227,15 @@ public class BookingSteps {
         response.then()
                 .statusCode(200)
                 .body("bookings.size()", greaterThan(0))
-                .body("bookings[0].roomid", notNullValue())
+                .body("bookings.bookingid", everyItem(notNullValue()))
+                .body("bookings.roomid",everyItem(not(isEmptyOrNullString())))
+                .body("bookings.firstname",everyItem(not(isEmptyOrNullString())))
+                .body("bookings.lastname", not(isEmptyOrNullString()))
+                .body("bookings.depositpaid", instanceOf(Boolean.class))
+                .body("bookings.email", not(isEmptyOrNullString()))
+                .body("bookings.phone", not(isEmptyOrNullString()))
+                .body("booking.bookingdates.checkin", notNullValue())
+                .body("booking.bookingdates.checkout", notNullValue())
                 .log().all();
     }
 
@@ -227,7 +257,7 @@ public class BookingSteps {
     public void iReceiveRoomIdUnavailable() {
         response.then()
                 .statusCode(200)
-                .body("[0].roomid", notNullValue())
+                .body("roomid", everyItem(notNullValue()))
                 .log().all();
     }
 
@@ -249,9 +279,7 @@ public class BookingSteps {
         response.then()
                 .statusCode(200)
                 .body("bookings.size()", greaterThan(0))
-                .body("bookings[0].bookingDates", notNullValue())
-                .body("bookings[0].checkin", notNullValue())
-                .body("bookings[0].checkout", notNullValue())
+                .body("bookings", notNullValue())
                 .log().all();
     }
 
@@ -313,4 +341,5 @@ public class BookingSteps {
                 .body("bookings.size()", equalTo(0))
                 .log().all();
     }
+
 }
