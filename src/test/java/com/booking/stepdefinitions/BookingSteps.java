@@ -62,21 +62,21 @@ public class BookingSteps {
     }
 
 
-    @Given("I have booking details payload available with {string}, {string}, {string}, {string}")
-    public void iHaveBookingDetailsPayload(String firstname, String lastname, String email, String phone) {
+    @Given("I have booking details for roomid {string} available with {string}, {string}, {string}, {string}, {string}, {string}")
+    public void iHaveBookingDetailsPayload(String roomid, String firstname, String lastname, String email, String phone, String checkin,String checkout) {
         requestBody = """
                             {
-                             "roomid": 1,
+                             "roomid": "%s",
                              "firstname": "%s",
                              "lastname": "%s",
                              "depositpaid": true,
                              "email": "%s",
                              "phone": "%s",
                              "bookingdates": {
-                              "checkin": "2025-07-03",
-                               "checkout": "2025-07-04"
+                              "checkin": "%s",
+                               "checkout": "%s"
                                              }
-                    }""".formatted(firstname, lastname, email, phone);
+                    }""".formatted(roomid,firstname, lastname, email, phone,checkin,checkout);
     }
 
     @When("I send a request to create the booking")
@@ -92,14 +92,16 @@ public class BookingSteps {
                     .extract().response();
     }
 
-    @Then("I will receive the booking details with {string}, {string}, {string}, {string}")
-    public void iShouldReceiveTheBookingDetails(String firstname, String lastname, String email, String phone) {
+    @Then("I will receive the booking details with {string}, {string}, {string}, {string}, {string}, {string}")
+    public void iShouldReceiveTheBookingDetails(String firstname, String lastname, String email, String phone, String checkin, String checkout) {
         response.then()
                 .statusCode(200)
                 .body("booking.firstname", equalTo(firstname))
                 .body("booking.lastname", equalTo(lastname))
                 .body("booking.email", equalTo(email))
                 .body("booking.phone", equalTo(phone))
+                .body("booking.bookingdates.checkin", equalTo(checkin))
+                .body("booking.bookingdates.checkout", equalTo(checkout))
                 .body("booking.size()", greaterThan(0))
                 .log().all();
     }
@@ -198,7 +200,7 @@ public class BookingSteps {
                 .extract().response();
     }
 
-    @Then("I shall receive the booking for rooomid successfully")
+    @Then("I shall receive the booking for roomid successfully")
     public void iReceiveRoomIdBookingDetails() {
         response.then()
                 .statusCode(200)
@@ -241,6 +243,7 @@ public class BookingSteps {
                 .extract().response();
     }
 
+
     @Then("I shall receive the booking summary successfully")
     public void iReceiveBookingSummary() {
         response.then()
@@ -252,15 +255,15 @@ public class BookingSteps {
                 .log().all();
     }
 
-    @Given("I send a request to Delete booking details based on id {int}")
-    public void iSendARequestToDeleteBookingDetailsBasedOnIdId(int id) {
+    @Given("I send a request to Delete booking details based on id")
+    public void iSendARequestToDeleteBookingDetailsBasedOnIdId() {
         //RestAssured.baseURI = "https://automationintesting.online/api/booking";
         response = given()
                 .log().all()
-                .cookie("token",token)
-                .pathParam("id", id)
+                //.cookie("token",token)
+                .pathParam("id", bookingId)
                 .when()
-                .delete("https://automationintesting.online/api/booking/")
+                .delete("https://automationintesting.online/api/booking/{id}")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -272,6 +275,42 @@ public class BookingSteps {
         response.then()
                 .statusCode(200)
                 .body(null)
+                .log().all();
+    }
+
+    //Error Step-definitions
+
+    @Then("I shall receive the error response for incorrect data")
+    public void iShallReceiveTheErrorForMissingRoomId() {
+        response.then()
+                .statusCode(404); //or 400 as per api response
+    }
+
+    @Then("I shall receive the error response for incorrect booking details")
+    public void iShallReceiveTheErrorForIncorrectBookingDetails() {
+        response.then()
+                .statusCode(400);
+    }
+
+    @When("I send a request to check booking details with invalid type {string}")
+    public void iSendARequestToCheckBookingDetailsWithInvalidIdId(String bookingId) {
+        response = given()
+                //   .cookie("token", token)
+                .log().all()
+                .pathParam("id", bookingId)
+                .when()
+                .get("https://automationintesting.online/api/booking/")
+                .then()
+                .log().all()
+                .extract().response();
+
+    }
+
+    @Then("I shall receive the empty response summary")
+    public void iShallReceiveTheEmptyResponseSummary() {
+        response.then()
+                .statusCode(200)
+                .body("bookings.size()", equalTo(0))
                 .log().all();
     }
 }

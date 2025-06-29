@@ -6,7 +6,9 @@ Feature: Delete booking details with id
   Scenario Outline: To delete the booking details with id
     Given I have booking id <id>
     When I send a request to Delete booking details based on id
-    Then The booking details deleted successfully
+    Then I shall receive the error response for incorrect data
+    #And I want to logout application with token
     Examples:
       | id | username | password |
-      | 1  | Johndoe  | Johndoe1 |
+      | 0  | Johndoe  | Johndoe1 |
+      | 9911992299  | Johndoe  | Johndoe1 |
