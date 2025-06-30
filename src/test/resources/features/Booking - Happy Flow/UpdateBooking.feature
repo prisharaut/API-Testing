@@ -1,6 +1,8 @@
 @booking
 
 Feature: Update booking details with id
+  Background:
+    Given I want to login to application with "admin", "password" and received token
   Scenario Outline: To update the booking details with id
     Given I have booking id <id>
     And I have updated the booking for bookingid <id> payload with "<roomid>", "<firstname>", "<lastname>", "<email>", "<phone>", "<checkin>", "<checkout>"

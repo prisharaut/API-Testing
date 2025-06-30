@@ -5,4 +5,4 @@ Feature: To Login
     When I want to login to application with "<username>", "<password>" and received token
     Examples:
       | username   | password |
-      | Johndoe        | johndoe1 |
+      | admin        | password |
