@@ -8,4 +8,4 @@ Feature: Update booking details with id
     Then I shall receive the updated booking details successfully for "<firstname>", "<lastname>", "<email>", "<phone>"
     Examples:
       | id | roomid  | firstname | lastname | email | phone |checkin | checkout |
-      | 1 | 1 | hello | world | hellloworld@test.com | 32490565114 |2025-07-03| 2025-07-04 |
+      | 1 | 1 | hello | world | johndoe@gmail.com | 32490572183 |2025-07-03| 2025-07-04 |
